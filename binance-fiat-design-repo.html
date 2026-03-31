@@ -1,0 +1,2301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binance Fiat Team — Design Knowledge Repo</title>
+<style>
+  :root {
+    --yellow: #F0B90B;
+    --yellow-dark: #C99A09;
+    --yellow-soft: #FEF6DC;
+    --black: #0B0E11;
+    --surface: #181A20;
+    --surface-2: #1E2026;
+    --surface-3: #2B2F36;
+    --border: rgba(255,255,255,0.08);
+    --text-primary: #EAECEF;
+    --text-secondary: #848E9C;
+    --text-muted: #5B6374;
+    --green: #03C087;
+    --red: #F6465D;
+    --blue: #1890FF;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--black);
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* TOP NAV */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 56px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: -0.3px;
+  }
+
+  .logo-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .logo-badge {
+    background: var(--yellow);
+    color: var(--black);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--surface-3);
+    border-radius: 8px;
+    padding: 3px;
+  }
+
+  .nav-tab {
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    white-space: nowrap;
+  }
+
+  .nav-tab.active {
+    background: var(--yellow);
+    color: var(--black);
+    font-weight: 600;
+  }
+
+  .nav-tab:hover:not(.active) {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-primary);
+  }
+
+  /* SIDEBAR + MAIN */
+  .layout {
+    display: flex;
+    height: calc(100vh - 56px);
+    overflow: hidden;
+  }
+
+  .sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px 0;
+  }
+
+  .sidebar-section {
+    margin-bottom: 4px;
+  }
+
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 8px 20px 4px;
+  }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 20px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.12s;
+    border-left: 2px solid transparent;
+  }
+
+  .sidebar-item:hover {
+    background: rgba(255,255,255,0.04);
+    color: var(--text-primary);
+  }
+
+  .sidebar-item.active {
+    background: rgba(240, 185, 11, 0.1);
+    color: var(--yellow);
+    border-left-color: var(--yellow);
+    font-weight: 500;
+  }
+
+  .sidebar-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .sidebar-item.active .sidebar-dot { background: var(--yellow); }
+
+  /* CONTENT */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 32px;
+    background: var(--black);
+  }
+
+  /* SECTIONS */
+  .section { display: none; }
+  .section.visible { display: block; }
+
+  .section-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--yellow);
+    margin-bottom: 6px;
+  }
+
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+
+  .section-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    max-width: 640px;
+  }
+
+  /* CARDS */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    transition: border-color 0.15s;
+  }
+
+  .card:hover { border-color: rgba(240,185,11,0.3); }
+
+  .card-icon {
+    font-size: 20px;
+    margin-bottom: 10px;
+    display: block;
+    line-height: 1;
+  }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+  }
+
+  .card-body {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  .card-tag {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(240,185,11,0.12);
+    color: var(--yellow);
+  }
+
+  /* PROCESS STEPS */
+  .process-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+    margin-bottom: 28px;
+  }
+
+  .process-step {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 16px;
+    position: relative;
+  }
+
+  .step-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .step-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--surface-3);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    z-index: 1;
+    transition: all 0.2s;
+  }
+
+  .process-step.active .step-number {
+    background: var(--yellow);
+    border-color: var(--yellow);
+    color: var(--black);
+  }
+
+  .step-line {
+    width: 1px;
+    flex: 1;
+    background: var(--border);
+    margin: 4px 0;
+    min-height: 24px;
+  }
+
+  .step-content {
+    padding: 0 0 24px;
+  }
+
+  .step-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+    padding-top: 5px;
+  }
+
+  .step-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  .step-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .step-tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  /* SPEC TABLE */
+  .spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+
+  .spec-table th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .spec-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    vertical-align: top;
+  }
+
+  .spec-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .spec-table td:first-child {
+    font-weight: 500;
+    color: var(--text-primary);
+    width: 200px;
+  }
+
+  .token {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    background: var(--surface-3);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--yellow);
+  }
+
+  /* COLOR PALETTE */
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .color-swatch {
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .swatch-block {
+    height: 48px;
+    width: 100%;
+  }
+
+  .swatch-label {
+    background: var(--surface);
+    padding: 6px 8px;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .swatch-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 12px;
+  }
+
+  /* RULE BLOCK */
+  .rule-block {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--yellow);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+
+  .rule-block.info { border-left-color: var(--blue); }
+  .rule-block.success { border-left-color: var(--green); }
+  .rule-block.danger { border-left-color: var(--red); }
+
+  .rule-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .rule-body {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .rule-body ul {
+    padding-left: 16px;
+    margin-top: 6px;
+  }
+
+  .rule-body li {
+    margin-bottom: 3px;
+  }
+
+  /* PILL BADGES */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  .pill-yellow { background: rgba(240,185,11,0.15); color: var(--yellow); }
+  .pill-green { background: rgba(3,192,135,0.15); color: var(--green); }
+  .pill-red { background: rgba(246,70,93,0.15); color: var(--red); }
+  .pill-blue { background: rgba(24,144,255,0.15); color: var(--blue); }
+
+  /* ACCORDION */
+  .accordion {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: var(--surface);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.12s;
+  }
+
+  .accordion-header:hover { background: var(--surface-2); }
+
+  .accordion-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .accordion-arrow {
+    font-size: 12px;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+  }
+
+  .accordion.open .accordion-arrow { transform: rotate(180deg); }
+
+  .accordion-body {
+    display: none;
+    padding: 16px 18px;
+    background: var(--black);
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  .accordion.open .accordion-body { display: block; }
+
+  .accordion-body ul {
+    padding-left: 18px;
+    margin-top: 8px;
+  }
+
+  .accordion-body li {
+    margin-bottom: 5px;
+  }
+
+  /* FLOW DIAGRAM */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .flow-node {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+
+  .flow-node.highlight {
+    background: rgba(240,185,11,0.12);
+    border-color: rgba(240,185,11,0.4);
+    color: var(--yellow);
+  }
+
+  .flow-arrow {
+    color: var(--text-muted);
+    font-size: 16px;
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  /* METRIC ROWS */
+  .metric-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+
+  .metric-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+  }
+
+  .metric-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .metric-sub {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 3px;
+  }
+
+  /* SCROLLBAR */
+  .sidebar::-webkit-scrollbar,
+  .content::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb,
+  .content::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
+
+  @media (max-width: 768px) {
+    .layout { flex-direction: column; height: auto; }
+    .sidebar { width: 100%; height: auto; }
+    .content { padding: 20px 16px; }
+    .metric-row { grid-template-columns: repeat(2, 1fr); }
+    .nav-tabs { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">
+    <svg class="logo-icon" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="28" height="28" rx="6" fill="#F0B90B"/>
+      <path d="M14 5L16.5 7.5L14 10L11.5 7.5L14 5Z" fill="#0B0E11"/>
+      <path d="M8 8.5L10.5 11L8 13.5L5.5 11L8 8.5Z" fill="#0B0E11"/>
+      <path d="M20 8.5L22.5 11L20 13.5L17.5 11L20 8.5Z" fill="#0B0E11"/>
+      <path d="M14 12L16.5 14.5L14 17L11.5 14.5L14 12Z" fill="#0B0E11"/>
+      <path d="M8 15.5L10.5 18L8 20.5L5.5 18L8 15.5Z" fill="#0B0E11"/>
+      <path d="M20 15.5L22.5 18L20 20.5L17.5 18L20 15.5Z" fill="#0B0E11"/>
+      <path d="M14 19L16.5 21.5L14 24L11.5 21.5L14 19Z" fill="#0B0E11"/>
+    </svg>
+    <span>Fiat Team Design Hub</span>
+    <span class="logo-badge">Internal</span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchSection('overview')">Overview</button>
+    <button class="nav-tab" onclick="switchSection('design-system')">Design System</button>
+    <button class="nav-tab" onclick="switchSection('process')">Process</button>
+    <button class="nav-tab" onclick="switchSection('fiat-ux')">Fiat UX</button>
+    <button class="nav-tab" onclick="switchSection('specs')">Specs</button>
+    <button class="nav-tab" onclick="switchSection('resources')">Resources</button>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Getting Started</div>
+      <div class="sidebar-item active" onclick="navTo('overview', this)"><div class="sidebar-dot"></div> Overview</div>
+      <div class="sidebar-item" onclick="navTo('team-context', this)"><div class="sidebar-dot"></div> Team context</div>
+      <div class="sidebar-item" onclick="navTo('30-60-90', this)"><div class="sidebar-dot"></div> 30-60-90 day plan</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Design System</div>
+      <div class="sidebar-item" onclick="navTo('design-system', this)"><div class="sidebar-dot"></div> Design principles</div>
+      <div class="sidebar-item" onclick="navTo('colors', this)"><div class="sidebar-dot"></div> Color tokens</div>
+      <div class="sidebar-item" onclick="navTo('typography', this)"><div class="sidebar-dot"></div> Typography</div>
+      <div class="sidebar-item" onclick="navTo('components', this)"><div class="sidebar-dot"></div> Component library</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Design Process</div>
+      <div class="sidebar-item" onclick="navTo('process', this)"><div class="sidebar-dot"></div> End-to-end process</div>
+      <div class="sidebar-item" onclick="navTo('research', this)"><div class="sidebar-dot"></div> Research methods</div>
+      <div class="sidebar-item" onclick="navTo('handoff', this)"><div class="sidebar-dot"></div> Dev handoff</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Fiat Team</div>
+      <div class="sidebar-item" onclick="navTo('fiat-ux', this)"><div class="sidebar-dot"></div> Fiat UX patterns</div>
+      <div class="sidebar-item" onclick="navTo('user-journeys', this)"><div class="sidebar-dot"></div> Key user journeys</div>
+      <div class="sidebar-item" onclick="navTo('user-types', this)"><div class="sidebar-dot"></div> User types</div>
+      <div class="sidebar-item" onclick="navTo('kyc', this)"><div class="sidebar-dot"></div> KYC & verification</div>
+      <div class="sidebar-item" onclick="navTo('payments', this)"><div class="sidebar-dot"></div> Payment flows</div>
+      <div class="sidebar-item" onclick="navTo('regulatory', this)"><div class="sidebar-dot"></div> Regulatory & compliance</div>
+      <div class="sidebar-item" onclick="navTo('metrics', this)"><div class="sidebar-dot"></div> Metrics you own</div>
+      <div class="sidebar-item" onclick="navTo('experimentation', this)"><div class="sidebar-dot"></div> Experimentation ideas</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Standards</div>
+      <div class="sidebar-item" onclick="navTo('specs', this)"><div class="sidebar-dot"></div> Spacing & layout</div>
+      <div class="sidebar-item" onclick="navTo('states-checklist', this)"><div class="sidebar-dot"></div> States checklist</div>
+      <div class="sidebar-item" onclick="navTo('accessibility', this)"><div class="sidebar-dot"></div> Accessibility</div>
+      <div class="sidebar-item" onclick="navTo('best-practices', this)"><div class="sidebar-dot"></div> Best practices</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Resources</div>
+      <div class="sidebar-item" onclick="navTo('resources', this)"><div class="sidebar-dot"></div> Figma files</div>
+      <div class="sidebar-item" onclick="navTo('competitors', this)"><div class="sidebar-dot"></div> Competitive analysis</div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="content" id="main-content">
+
+    <!-- OVERVIEW -->
+    <div id="sec-overview" class="section visible">
+      <div class="section-header">
+        <div class="section-tag">Welcome</div>
+        <div class="section-title">Binance Fiat Team — Design Hub</div>
+        <div class="section-desc">Your central repository for design knowledge, processes, and standards for the Fiat product team. Built for senior designers hitting the ground running.</div>
+      </div>
+
+      <div class="metric-row">
+        <div class="metric-card">
+          <div class="metric-label">Team</div>
+          <div class="metric-value">Fiat</div>
+          <div class="metric-sub">Buy / Sell / Deposit / Withdraw</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Design tool</div>
+          <div class="metric-value">Figma</div>
+          <div class="metric-sub">+ Binance Flex design system</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Principles</div>
+          <div class="metric-value">5</div>
+          <div class="metric-sub">Simplicity · Trust · Transparency · Innovation · Community</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Registered users</div>
+          <div class="metric-value">600M+</div>
+          <div class="metric-sub">Majority on mobile, global</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Platforms</div>
+          <div class="metric-value">4</div>
+          <div class="metric-sub">iOS · Android · Desktop Web · Binance Lite</div>
+        </div>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <span class="card-icon">🧩</span>
+          <div class="card-title">Design System</div>
+          <div class="card-body">Binance Flex — the internal component library covering tokens, components, and patterns for all three platforms in light and dark mode.</div>
+          <span class="card-tag">Foundation</span>
+        </div>
+        <div class="card">
+          <span class="card-icon">🔄</span>
+          <div class="card-title">E2E Design Process</div>
+          <div class="card-body">Discovery → Define → Design → Prototype → Test → Handoff → Measure. How projects flow from an idea to shipped product.</div>
+          <span class="card-tag">Process</span>
+        </div>
+        <div class="card">
+          <span class="card-icon">💳</span>
+          <div class="card-title">Fiat UX Patterns</div>
+          <div class="card-body">Buy/sell flows, deposit/withdrawal, KYC verification, payment method selection, and regulatory compliance patterns.</div>
+          <span class="card-tag">Fiat-Specific</span>
+        </div>
+        <div class="card">
+          <span class="card-icon">📐</span>
+          <div class="card-title">Specs & Standards</div>
+          <div class="card-body">Grid systems, spacing tokens, iconography rules, motion guidelines, and accessibility requirements.</div>
+          <span class="card-tag">Standards</span>
+        </div>
+        <div class="card">
+          <span class="card-icon">🔬</span>
+          <div class="card-title">Research Methods</div>
+          <div class="card-body">Moderated user testing, A/B testing frameworks, feature request channels, and how to synthesize findings into design decisions.</div>
+          <span class="card-tag">Research</span>
+        </div>
+        <div class="card">
+          <span class="card-icon">🌍</span>
+          <div class="card-title">Competitive Analysis</div>
+          <div class="card-body">Benchmarks against Coinbase, Kraken, eToro, Revolut, and PayPal across fiat deposit/withdrawal, KYC, and payment UX.</div>
+          <span class="card-tag">Intelligence</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAM CONTEXT -->
+    <div id="sec-team-context" class="section">
+      <div class="section-header">
+        <div class="section-tag">Getting Started</div>
+        <div class="section-title">Fiat Team context</div>
+        <div class="section-desc">What the Fiat team owns, how we operate, and what success looks like.</div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-title">What the Fiat team does</div>
+        <div class="rule-body">The Fiat team owns every touchpoint where users convert between traditional currency and crypto — and back. This includes buy/sell flows, bank deposits, card payments, local payment methods, fiat withdrawal, off-ramp integrations (like Paymonade), and the KYC/verification gates that unlock higher limits. We are the entry point to Binance for new users and a critical revenue surface for the company.</div>
+      </div>
+
+      <div class="rule-block info">
+        <div class="rule-title">Core product surfaces we own</div>
+        <div class="rule-body">
+          <ul>
+            <li><strong>Buy Crypto</strong> — card (Visa/MC), bank transfer, third-party providers (Simplex, Banxa), local payment methods, P2P trading</li>
+            <li><strong>Sell Crypto</strong> — direct to card (Paymonade), bank transfer, fiat wallet, P2P</li>
+            <li><strong>Deposit Fiat</strong> — bank transfer, SEPA, SWIFT, local rails</li>
+            <li><strong>Withdraw Fiat</strong> — bank withdrawal, card off-ramp, currency conversion</li>
+            <li><strong>KYC & Identity</strong> — verification gates, limit management, enhanced due diligence (EDD)</li>
+            <li><strong>Payment Method Management</strong> — adding/removing cards, bank account linking, payment limits & tiers</li>
+            <li><strong>Binance Connect</strong> — fiat-to-crypto for third-party Web3 projects</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="rule-block success">
+        <div class="rule-title">Key stakeholders we design with</div>
+        <div class="rule-body">
+          <ul>
+            <li>Fiat Product Managers (roadmap, OKRs, requirements)</li>
+            <li>Compliance & Legal (regulatory constraints, market-specific rules)</li>
+            <li>Engineering (feasibility, component reuse, handoff)</li>
+            <li>UX Research (usability studies, user interviews)</li>
+            <li>Risk & Fraud (friction calibration in payment flows)</li>
+            <li>Customer Support (identifying recurring pain points)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 30-60-90 DAY PLAN -->
+    <div id="sec-30-60-90" class="section">
+      <div class="section-header">
+        <div class="section-tag">Getting Started</div>
+        <div class="section-title">30-60-90 day plan</div>
+        <div class="section-desc">A structured onboarding roadmap to go from learning to leading within your first three months on the Fiat team.</div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-title">Days 1–30 — Learn</div>
+        <div class="rule-body">
+          <ul>
+            <li>Audit all existing Fiat flows end-to-end: Buy, Sell, Deposit, Withdraw, KYC</li>
+            <li>Map the full Fiat user journey and identify where the biggest drop-offs occur</li>
+            <li>Interview 3–5 team members: PM, Engineering, Customer Support, Compliance, a peer designer</li>
+            <li>Review the last 3 shipped features — what was the outcome? What was cut and why?</li>
+            <li>Get fully onboarded on the Binance Flex design system and component library in Figma</li>
+            <li>Sit in on customer support sessions or read a week's worth of fiat-related tickets</li>
+            <li>Read any available research reports or usability test findings from the past 6 months</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="rule-block info">
+        <div class="rule-title">Days 31–60 — Contribute</div>
+        <div class="rule-body">
+          <ul>
+            <li>Own at least one feature or improvement end-to-end — from problem framing to handoff</li>
+            <li>Run a small usability test (even 3–5 sessions) and present findings to the team</li>
+            <li>Identify 3 quick wins in existing flows — high-friction moments that can be improved now</li>
+            <li>Document a design decision that wasn't previously written down (helps the whole team)</li>
+            <li>Establish your working rhythm with your PM — how often do you sync? How is work prioritized?</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="rule-block success">
+        <div class="rule-title">Days 61–90 — Lead</div>
+        <div class="rule-body">
+          <ul>
+            <li>Present a design strategy proposal for a key Fiat initiative to stakeholders</li>
+            <li>Establish or improve the design review cadence with your team</li>
+            <li>Begin contributing back to the design system — propose or build a missing component</li>
+            <li>Build cross-functional relationships with Compliance, Risk, and Data — these are your power multipliers on Fiat</li>
+            <li>Set your own OKRs for the next quarter aligned with the Fiat team's goals</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- DESIGN SYSTEM -->
+    <div id="sec-design-system" class="section">
+      <div class="section-header">
+        <div class="section-tag">Design System</div>
+        <div class="section-title">Design principles</div>
+        <div class="section-desc">Binance product development is guided by five core principles. Every design decision should be traceable back to at least one of these.</div>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Simplicity</div>
+          <div class="card-body">Crypto is complex. Our job is to abstract complexity, not expose it. Every screen should do one thing well. Remove anything that doesn't serve the user's primary task.</div>
+          <span class="card-tag">Principle 1</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Trust</div>
+          <div class="card-body">Users are moving real money. Design must convey security at every step — through clear status communication, transparent fee display, and consistent visual language.</div>
+          <span class="card-tag">Principle 2</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Transparency</div>
+          <div class="card-body">Fees, rates, processing times, and limits must be shown up front. Never hide costs or bury critical information. Users should never feel surprised after a transaction.</div>
+          <span class="card-tag">Principle 3</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Innovation</div>
+          <div class="card-body">Push the boundaries of what fiat onramp/offramp experiences look like. Benchmark against fintech leaders, not just crypto competitors.</div>
+          <span class="card-tag">Principle 4</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Community</div>
+          <div class="card-body">Designs must serve a global audience across very different financial contexts — from banked users in the EU to mobile-first users in emerging markets.</div>
+          <span class="card-tag">Principle 5</span>
+        </div>
+      </div>
+
+      <div class="section-header" style="margin-top: 28px;">
+        <div class="section-title" style="font-size: 17px;">Atomic Design structure</div>
+      </div>
+
+      <div class="card-grid" style="margin-bottom: 24px;">
+        <div class="card">
+          <div class="card-title">Atoms</div>
+          <div class="card-body">Smallest indivisible elements: color tokens, typography scale, spacing values, icons, individual input fields, buttons.</div>
+          <span class="card-tag">Level 1</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Molecules</div>
+          <div class="card-body">Groups of atoms: form field + label + error message, button + icon, card with price + currency tag.</div>
+          <span class="card-tag">Level 2</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Organisms</div>
+          <div class="card-body">Complex UI sections: payment method selector, amount input with rate display, KYC verification step, full form panel.</div>
+          <span class="card-tag">Level 3</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Templates</div>
+          <div class="card-body">Page-level layout scaffolding without real content: the buy flow shell, deposit screen template, confirmation layout.</div>
+          <span class="card-tag">Level 4</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Pages</div>
+          <div class="card-body">Templates filled with real content and data. These are the final deliverables your engineers build from.</div>
+          <span class="card-tag">Level 5</span>
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-title">Token hierarchy</div>
+        <div class="rule-body">
+          <div style="font-family: 'Courier New', monospace; font-size: 12px; line-height: 2; color: var(--text-secondary);">
+            Color Tokens<br>
+            &nbsp;&nbsp;├── Primary: Yellow <span class="token">#F0B90B</span> — Brand, primary CTAs<br>
+            &nbsp;&nbsp;├── Semantic: <span class="token">Success</span> / <span class="token">Warning</span> / <span class="token">Error</span> / <span class="token">Info</span><br>
+            &nbsp;&nbsp;└── Neutral: Background / Surface / Border / Text hierarchy<br>
+            <br>
+            Typography Scale<br>
+            &nbsp;&nbsp;├── Display → Heading → Body → Caption → Label<br>
+            &nbsp;&nbsp;└── Weight: Regular 400 / Medium 500 / SemiBold 600 / Bold 700<br>
+            <br>
+            Spacing — Base 4px grid<br>
+            &nbsp;&nbsp;└── 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64px<br>
+            <br>
+            Elevation / Shadow<br>
+            &nbsp;&nbsp;└── Used for modals, cards, dropdowns, tooltips
+          </div>
+        </div>
+      </div>
+
+      <div class="section-header" style="margin-top: 28px; border: none; margin-bottom: 12px;">
+        <div class="section-title" style="font-size: 17px;">Visual design language</div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-title">Dark-first, yellow-accented</div>
+        <div class="rule-body">Binance UI is primarily dark (surface: #181A20, background: #0B0E11). Yellow (#F0B90B) is used exclusively for primary CTAs, active states, and brand moments. Green (#03C087) signals success and navigational links. Red (#F6465D) is for errors, warnings, and sell actions.</div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-title">Content-forward design</div>
+        <div class="rule-body">The interface should not compete with the content. Use subtle visual hierarchy — not decorative elements — to guide attention. Subtlety is the operating principle: let prices, rates, and status be the visual heroes.</div>
+      </div>
+
+      <div class="rule-block success">
+        <div class="rule-title">Light and dark modes</div>
+        <div class="rule-body">All components must be designed for both light and dark mode from the start. Dark is the default; light is increasingly important for institutional and web-facing products. Never design one and adapt the other — co-design them using the Binance Flex token system.</div>
+      </div>
+    </div>
+
+    <!-- COLORS -->
+    <div id="sec-colors" class="section">
+      <div class="section-header">
+        <div class="section-tag">Design System</div>
+        <div class="section-title">Color tokens</div>
+        <div class="section-desc">Core color palette used across all Binance products. Each color has semantic meaning — use them consistently.</div>
+      </div>
+
+      <div class="color-grid">
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#F0B90B;"></div>
+          <div class="swatch-label"><div class="swatch-name">Brand Yellow</div>#F0B90B</div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#181A20;"></div>
+          <div class="swatch-label"><div class="swatch-name">Surface</div>#181A20</div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#0B0E11;"></div>
+          <div class="swatch-label"><div class="swatch-name">Background</div>#0B0E11</div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#2B2F36;"></div>
+          <div class="swatch-label"><div class="swatch-name">Surface 3</div>#2B2F36</div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#03C087;"></div>
+          <div class="swatch-label"><div class="swatch-name">Success / Buy</div>#03C087</div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#F6465D;"></div>
+          <div class="swatch-label"><div class="swatch-name">Error / Sell</div>#F6465D</div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#1890FF;"></div>
+          <div class="swatch-label"><div class="swatch-name">Info / Link</div>#1890FF</div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#EAECEF;"></div>
+          <div class="swatch-label"><div class="swatch-name">Text Primary</div>#EAECEF</div>
+        </div>
+        <div class="color-swatch">
+          <div class="swatch-block" style="background:#848E9C;"></div>
+          <div class="swatch-label"><div class="swatch-name">Text Secondary</div>#848E9C</div>
+        </div>
+      </div>
+
+      <div class="rule-block danger">
+        <div class="rule-title">What was removed — and why</div>
+        <div class="rule-body">Blue was removed from the primary palette because it created visual confusion alongside yellow and green. The new system uses blue only for informational links and tooltips, never for primary actions or navigation states.</div>
+      </div>
+    </div>
+
+    <!-- TYPOGRAPHY -->
+    <div id="sec-typography" class="section">
+      <div class="section-header">
+        <div class="section-tag">Design System</div>
+        <div class="section-title">Typography</div>
+        <div class="section-desc">Binance uses its custom typeface — Binance Flex — replacing the legacy DIN Next font. Binance Flex is designed for cross-platform consistency and multilingual support.</div>
+      </div>
+
+      <table class="spec-table">
+        <thead><tr><th>Role</th><th>Style</th><th>Size</th><th>Weight</th><th>Usage</th></tr></thead>
+        <tbody>
+          <tr><td>Display</td><td>Binance Flex Bold</td><td>28–40px</td><td>700</td><td>Hero amounts, large numbers (price display)</td></tr>
+          <tr><td>Heading 1</td><td>Binance Flex SemiBold</td><td>22–24px</td><td>600</td><td>Page titles, section headers</td></tr>
+          <tr><td>Heading 2</td><td>Binance Flex Medium</td><td>16–18px</td><td>500</td><td>Card titles, modal headers</td></tr>
+          <tr><td>Body</td><td>Binance Flex Regular</td><td>14px</td><td>400</td><td>Primary content, instructions</td></tr>
+          <tr><td>Caption</td><td>Binance Flex Regular</td><td>12px</td><td>400</td><td>Labels, metadata, helper text</td></tr>
+          <tr><td>Micro</td><td>Binance Flex Regular</td><td>10–11px</td><td>400</td><td>Legal footnotes, compliance text</td></tr>
+          <tr><td>Numeric</td><td>Binance Flex Tabular</td><td>Varies</td><td>500–700</td><td>Prices, amounts — must use tabular figures</td></tr>
+        </tbody>
+      </table>
+
+      <div class="rule-block">
+        <div class="rule-title">Fiat-specific typography rules</div>
+        <div class="rule-body">
+          <ul>
+            <li>Always use tabular numerals for amounts, rates, and countdowns — monospaced digits prevent layout jumps</li>
+            <li>Currency symbols should be slightly smaller than the amount (≈80% size) to create visual balance</li>
+            <li>Localized number formatting must be respected — <span class="token">1,234.56</span> (EN) vs <span class="token">1.234,56</span> (DE)</li>
+            <li>Legal/compliance text must meet minimum 11px size and pass WCAG AA contrast ratios</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPONENTS -->
+    <div id="sec-components" class="section">
+      <div class="section-header">
+        <div class="section-tag">Design System</div>
+        <div class="section-title">Component library</div>
+        <div class="section-desc">The Binance Flex component library in Figma. Before building anything custom, verify the component doesn't already exist.</div>
+      </div>
+
+      <div class="accordion open">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">Buttons & CTAs</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <ul>
+            <li><strong>Primary:</strong> Yellow fill, black text — reserved for the single most important action per screen (Buy, Continue, Confirm)</li>
+            <li><strong>Secondary:</strong> Ghost/outlined — supporting actions (View Details, Learn More)</li>
+            <li><strong>Destructive:</strong> Red text or fill — Cancel, Delete, Reject</li>
+            <li><strong>Full-width CTAs</strong> are standard in mobile flows. Never stack two primary buttons.</li>
+            <li>Sticky bottom CTAs keep Buy/Sell buttons accessible while browsing — do not paginate behind scroll</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">Input fields</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <ul>
+            <li>Amount inputs: large font, numeric keyboard triggered on mobile, inline currency toggle</li>
+            <li>Text inputs: 48px height on mobile (touch target), 40px on desktop</li>
+            <li>Always show real-time validation — don't wait for form submission</li>
+            <li>Error states: red border + below-field error message. Never red text inside the field.</li>
+            <li>For fiat amounts: always show the converted crypto equivalent in real-time below the input</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">Status indicators & feedback</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <ul>
+            <li>Processing states require animated indicators — never static spinners</li>
+            <li>Success screens: green checkmark + summary of what happened + primary next action</li>
+            <li>Error screens: clear explanation + what the user can do next — never just an error code</li>
+            <li>Pending states for bank transfers must show estimated completion time</li>
+            <li>Toast notifications for background events (payment received, order filled)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">Cards & list items</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <ul>
+            <li>Payment method cards: icon + method name + masked details + status badge</li>
+            <li>Transaction history items: amount (primary), date/time, status pill, expandable for details</li>
+            <li>Use dividers between list items, not card borders for dense lists</li>
+            <li>Swipe actions on mobile (delete, set default) must have visual affordance</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">Modals & bottom sheets</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <ul>
+            <li>Mobile: use bottom sheets for confirmations and detail views — not full-screen modals</li>
+            <li>Desktop: centered modals for confirmations, side panels for details</li>
+            <li>Always include a dismiss handle/button — never trap the user</li>
+            <li>Confirmation modals for irreversible actions must restate the exact amounts involved</li>
+          </ul>
+        </div>
+      </div>
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">Forms — critical for Fiat</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <ul>
+            <li>Use correct HTML input types: <span class="token">tel</span> for phone, <span class="token">number</span> for amounts, <span class="token">email</span> — triggers the right keyboard on mobile</li>
+            <li>Validate on blur (when leaving a field), not on keypress — avoid overwhelming the user mid-typing</li>
+            <li>Auto-format card numbers as the user types: <span class="token">4444 4444 4444 4444</span></li>
+            <li>Numeric keyboards for all amount inputs — never show a text keyboard for money entry</li>
+            <li>Show password / card number reveal toggles — don't force masking on entry</li>
+            <li>Inline validation — error messages appear directly below the field, never in a toast</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">Loading states</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <ul>
+            <li>Prefer skeleton screens over spinners for layout-heavy pages — they set expectations and reduce perceived wait</li>
+            <li>Show progress for long operations: bank verification can take 30s+; never leave users on a blank screen</li>
+            <li>For bank transfers processing: show a step indicator ("Contacting your bank… Verifying… Almost done")</li>
+            <li>Rate refresh: show a live countdown timer (e.g. 29s remaining) — not just a spinner</li>
+            <li>Never use a static spinner for anything that takes more than 3 seconds</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">Figma file structure standard</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <div style="font-family: 'Courier New', monospace; font-size: 12px; line-height: 2; color: var(--text-secondary);">
+            🗺 Cover — project name, version, owner, date<br>
+            📋 Index / Sitemap<br>
+            🔍 Research & Discovery<br>
+            📐 User Flows<br>
+            🎨 Design — [Feature Name]<br>
+            &nbsp;&nbsp;&nbsp;├── Mobile<br>
+            &nbsp;&nbsp;&nbsp;├── Desktop<br>
+            &nbsp;&nbsp;&nbsp;└── Edge Cases & States<br>
+            🔧 Handoff / Specs<br>
+            🗄 Archive
+          </div>
+          <div style="margin-top: 12px;">
+            <strong style="color: var(--text-primary); font-size: 12px;">Naming convention:</strong><br>
+            <span class="token">[Platform] / [Flow] / [Screen Name] / [State]</span><br>
+            <span style="font-size: 12px; color: var(--text-muted); margin-top: 4px; display: block;">e.g. iOS / Buy Crypto / Amount Entry / Error State</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div id="sec-process" class="section">
+      <div class="section-header">
+        <div class="section-tag">Design Process</div>
+        <div class="section-title">End-to-end design process</div>
+        <div class="section-desc">How projects move from a problem statement to a shipped, measured feature on the Fiat team.</div>
+      </div>
+
+      <div class="process-steps">
+        <div class="process-step active">
+          <div class="step-left">
+            <div class="step-number">1</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Discovery & problem framing</div>
+            <div class="step-desc">Collaborate with PM and Research to understand the problem space. Review data, customer feedback, support tickets, and qualitative research. Define success metrics before touching design tools.</div>
+            <div class="step-tags">
+              <span class="step-tag">User interviews</span>
+              <span class="step-tag">Data analysis</span>
+              <span class="step-tag">Competitive audit</span>
+              <span class="step-tag">Problem statement</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="process-step">
+          <div class="step-left">
+            <div class="step-number">2</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Define & align</div>
+            <div class="step-desc">Create a design brief documenting the user problem, scope, constraints (regulatory, technical, timeline), and metrics. Get PM, Compliance, and Engineering aligned before moving to ideation.</div>
+            <div class="step-tags">
+              <span class="step-tag">Design brief</span>
+              <span class="step-tag">Constraints mapping</span>
+              <span class="step-tag">Stakeholder sign-off</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="process-step">
+          <div class="step-left">
+            <div class="step-number">3</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Ideation & exploration</div>
+            <div class="step-desc">Low-fidelity exploration in Figma. Multiple concepts. Use FigJam for collaborative mapping of user flows. Share early and gather feedback — avoid designing in isolation.</div>
+            <div class="step-tags">
+              <span class="step-tag">User flows</span>
+              <span class="step-tag">Wireframes</span>
+              <span class="step-tag">Concept sketches</span>
+              <span class="step-tag">Design critique</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="process-step">
+          <div class="step-left">
+            <div class="step-number">4</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">High-fidelity design</div>
+            <div class="step-desc">Build out the preferred concept in Figma using Binance Flex components. Design for all states: empty, loading, error, success, edge cases. Design for iOS, Android, and desktop concurrently — they share patterns but have platform-specific interactions.</div>
+            <div class="step-tags">
+              <span class="step-tag">Figma components</span>
+              <span class="step-tag">All states</span>
+              <span class="step-tag">Dark + light mode</span>
+              <span class="step-tag">3 platforms</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="process-step">
+          <div class="step-left">
+            <div class="step-number">5</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Prototype & test</div>
+            <div class="step-desc">Build interactive prototypes in Figma for usability testing. Work with UX Research to run moderated or unmoderated sessions. Prioritize testing on the Fiat team's most critical flows: buy flow, deposit, and KYC.</div>
+            <div class="step-tags">
+              <span class="step-tag">Figma prototype</span>
+              <span class="step-tag">Usability testing</span>
+              <span class="step-tag">A/B testing setup</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="process-step">
+          <div class="step-left">
+            <div class="step-number">6</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Dev handoff</div>
+            <div class="step-desc">Annotate designs in Figma with interaction notes, component specs, and edge case documentation. Hold a handoff meeting with engineering. Stay available for implementation Q&A and conduct design QA on builds.</div>
+            <div class="step-tags">
+              <span class="step-tag">Figma annotations</span>
+              <span class="step-tag">Handoff meeting</span>
+              <span class="step-tag">Design QA</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="process-step">
+          <div class="step-left">
+            <div class="step-number">7</div>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Launch & measure</div>
+            <div class="step-desc">Monitor the feature post-launch using agreed success metrics. Run A/B tests where applicable. Document learnings in Confluence. Feed insights back into the next iteration.</div>
+            <div class="step-tags">
+              <span class="step-tag">Metrics review</span>
+              <span class="step-tag">A/B analysis</span>
+              <span class="step-tag">Iteration plan</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESEARCH -->
+    <div id="sec-research" class="section">
+      <div class="section-header">
+        <div class="section-tag">Design Process</div>
+        <div class="section-title">Research methods</div>
+        <div class="section-desc">How the Fiat team gathers, synthesizes, and applies user insights. Choose the right method for the question you're trying to answer.</div>
+      </div>
+
+      <table class="spec-table" style="margin-bottom: 24px;">
+        <thead><tr><th>Method</th><th>When to use</th><th>Typical time</th></tr></thead>
+        <tbody>
+          <tr><td>User interviews</td><td>Discovery, concept validation, understanding mental models</td><td>2–3 weeks</td></tr>
+          <tr><td>Usability testing</td><td>Mid-fi or hi-fi prototype validation</td><td>1–2 weeks</td></tr>
+          <tr><td>Card sorting</td><td>IA decisions, navigation structure</td><td>1 week</td></tr>
+          <tr><td>Tree testing</td><td>Validating navigation without visual UI</td><td>1 week</td></tr>
+          <tr><td>A/B testing</td><td>Live product optimization — CTA copy, flow variants, layouts</td><td>2–4 weeks</td></tr>
+          <tr><td>Analytics deep dive</td><td>Identify funnel drop-offs, usage patterns</td><td>1–3 days</td></tr>
+          <tr><td>Heuristic evaluation</td><td>Quick audit of existing flows — no participants needed</td><td>2–3 days</td></tr>
+          <tr><td>Support ticket analysis</td><td>Finding recurring UX failures at scale</td><td>1–2 days</td></tr>
+        </tbody>
+      </table>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Trust signals research</div>
+          <div class="card-body">What makes users feel safe entering payment details? Test specific UI elements — security badges, fee clarity, visual hierarchy — against user confidence ratings.</div>
+          <span class="card-tag">Fiat Focus</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Fee transparency testing</div>
+          <div class="card-body">At which point in the flow should fees be shown? Early disclosure increases trust and conversion. Test the optimal moment — don't assume the confirmation step is right.</div>
+          <span class="card-tag">Fiat Focus</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Error recovery research</div>
+          <div class="card-body">How do users respond to failed transactions? What do they do next? This research shapes your error state copy and recovery flow design.</div>
+          <span class="card-tag">Fiat Focus</span>
+        </div>
+        <div class="card">
+          <div class="card-title">KYC friction mapping</div>
+          <div class="card-body">Where exactly does KYC cause drop-off? Use funnel analytics + follow-up interviews to understand whether drop-off is friction, fear, or lack of information.</div>
+          <span class="card-tag">Fiat Focus</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEV HANDOFF -->
+    <div id="sec-handoff" class="section">
+      <div class="section-header">
+        <div class="section-tag">Design Process</div>
+        <div class="section-title">Dev handoff standards</div>
+        <div class="section-desc">What engineering needs from design to ship accurately and efficiently.</div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-title">Figma file organization</div>
+        <div class="rule-body">
+          <ul>
+            <li>One Figma file per major feature/initiative. Archive previous versions, never delete.</li>
+            <li>Pages: Cover → Flows → Components → States & Edge Cases → Archive</li>
+            <li>Use the Binance Flex component library (shared Figma library) — never detach components without a reason documented in the annotation</li>
+            <li>Name frames clearly: <span class="token">[Platform] / [Flow] / [Screen name] / [State]</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="rule-block success">
+        <div class="rule-title">What to annotate</div>
+        <div class="rule-body">
+          <ul>
+            <li>Micro-interactions and animation specs (duration, easing)</li>
+            <li>Component behavior on different states (hover, active, disabled, loading)</li>
+            <li>Edge cases: zero state, max character limits, very long names, currency formatting edge cases</li>
+            <li>Responsive behavior breakpoints</li>
+            <li>Anything that deviates from the design system — and why</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="rule-block info">
+        <div class="rule-title">Design QA checklist</div>
+        <div class="rule-body">
+          <ul>
+            <li>Font sizes, weights, and spacing match spec</li>
+            <li>Colors use the correct tokens (not hardcoded hex values)</li>
+            <li>Interactive elements have the correct touch targets (≥44px on mobile)</li>
+            <li>Error and loading states are implemented, not just the happy path</li>
+            <li>Dark mode is visually tested on device</li>
+            <li>Text truncation and overflow are handled gracefully</li>
+            <li>Localized strings don't break layout (test with German/Portuguese as stress tests)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIAT UX PATTERNS -->
+    <div id="sec-fiat-ux" class="section">
+      <div class="section-header">
+        <div class="section-tag">Fiat Team</div>
+        <div class="section-title">Fiat UX patterns</div>
+        <div class="section-desc">Core interaction patterns specific to fiat on/off-ramp flows. These are the most critical and highest-stakes surfaces we design.</div>
+      </div>
+
+      <div class="section-header" style="margin-top: 8px; border: none; margin-bottom: 12px;">
+        <div class="section-title" style="font-size: 15px;">Buy Crypto flow</div>
+      </div>
+
+      <div class="flow">
+        <div class="flow-node">Select crypto</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">Enter fiat amount</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">Select payment method</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node highlight">Review & confirm</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">Processing</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">Success</div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-title">Buy flow design rules</div>
+        <div class="rule-body">
+          <ul>
+            <li>Show real-time crypto equivalent as user types the fiat amount — never make them calculate</li>
+            <li>Display the all-in price including fees before confirmation — no surprises at review step</li>
+            <li>Rate refresh timer must be visible (rates are live) — warn before expiry and allow refresh</li>
+            <li>Payment method selection must show processing time and fees per method</li>
+            <li>Confirmation screen must be a dead stop — make it impossible to accidentally submit</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="section-header" style="margin-top: 20px; border: none; margin-bottom: 12px;">
+        <div class="section-title" style="font-size: 15px;">Sell Crypto / Fiat off-ramp flow</div>
+      </div>
+
+      <div class="flow">
+        <div class="flow-node">Select crypto to sell</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">Enter amount</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">Choose destination</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node highlight">Review</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">2FA / confirmation</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">Processing</div>
+      </div>
+
+      <div class="rule-block info">
+        <div class="rule-title">Sell flow specifics</div>
+        <div class="rule-body">
+          <ul>
+            <li>Destination selection: bank account or card — show masked details, not just an account name</li>
+            <li>For card off-ramps (Paymonade integration): clearly show conversion rate and arrival estimate</li>
+            <li>Bank transfers: show ETA prominently (T+1, T+3 etc) — this is a top support issue</li>
+            <li>Always confirm the fiat currency and amount the user will receive, not just what they're selling</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- KEY USER JOURNEYS -->
+    <div id="sec-user-journeys" class="section">
+      <div class="section-header">
+        <div class="section-tag">Fiat Team</div>
+        <div class="section-title">Key user journeys</div>
+        <div class="section-desc">The five core journeys the Fiat team owns. Every feature initiative maps to one or more of these.</div>
+      </div>
+
+      <div class="accordion open">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">1 — First-time buyer</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <div class="flow" style="margin-bottom: 12px;">
+            <div class="flow-node">Sign up</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node highlight">KYC</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">Add payment method</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node highlight">First purchase</div>
+          </div>
+          The highest-stakes journey — this is where trust is established or lost forever. KYC friction is the biggest drop-off. Every extra step costs conversion. Benchmark: what does it take to go from sign-up to holding crypto? Aim to minimize to under 5 minutes for basic verification.
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">2 — Returning buyer (quick buy)</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <div class="flow" style="margin-bottom: 12px;">
+            <div class="flow-node">Open app</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">Select crypto + amount</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node highlight">Saved payment method</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">Confirm</div>
+          </div>
+          Speed is everything here. Saved payment methods must be surfaced immediately. Pre-fill the last used crypto and amount. Rate lock timer visible. One tap to confirm. This journey drives repeat revenue — optimize ruthlessly.
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">3 — Withdrawal flow</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <div class="flow" style="margin-bottom: 12px;">
+            <div class="flow-node">Select currency</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">Enter amount</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">Choose bank</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node highlight">Confirm</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">Status tracking</div>
+          </div>
+          Users are anxious when money leaves their wallet. Clear ETA on arrival (T+1 for SEPA Instant, T+3 standard) is non-negotiable. Transaction reference number must be shown and copyable. Status updates via notification reduce support tickets significantly.
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">4 — Limit increase</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <div class="flow" style="margin-bottom: 12px;">
+            <div class="flow-node">Hit limit</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node highlight">Upgrade prompt</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">Additional verification</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">New limit unlocked</div>
+          </div>
+          The limit prompt is a make-or-break moment. Frame it as an opportunity, not a wall. Clearly show what's unlocked at the next tier. Pre-fill any info already collected. The verification process itself must feel like progress, not bureaucracy.
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">5 — Failed transaction recovery</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <div class="flow" style="margin-bottom: 12px;">
+            <div class="flow-node highlight">Transaction fails</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">Clear error explanation</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">Recovery options</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">Retry or alternative</div>
+          </div>
+          A failed transaction handled well can retain the user. A bad error state sends them to a competitor. Be specific: "Your card was declined by your bank" not "Payment failed." Always offer a clear next step: try a different card, use bank transfer, or contact support with a reference ID.
+        </div>
+      </div>
+    </div>
+
+    <!-- USER TYPES -->
+    <div id="sec-user-types" class="section">
+      <div class="section-header">
+        <div class="section-tag">Fiat Team</div>
+        <div class="section-title">User types</div>
+        <div class="section-desc">Binance's fiat users span an enormous range of needs, sophistication, and risk profiles. Design for the whole spectrum.</div>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">First-time crypto buyers</div>
+          <div class="card-body">Most anxious segment. Need the most guidance, the clearest language, and the most reassurance. Every label, every fee line, every KYC prompt needs to work for someone who has never bought crypto before.</div>
+          <div style="margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap;">
+            <span class="pill pill-yellow">High anxiety</span>
+            <span class="pill pill-blue">High guidance needed</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Active traders</div>
+          <div class="card-body">Need speed above all. They're moving money when the market moves. Every extra step is a conversion lost. Saved payment methods, pre-filled amounts, and one-tap confirm are essential for this segment.</div>
+          <div style="margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap;">
+            <span class="pill pill-green">Speed-critical</span>
+            <span class="pill pill-blue">Low friction needed</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Arbitrage users</div>
+          <div class="card-body">Moving large amounts across platforms quickly. Sensitive to any delay, rate difference, or added friction. They'll abandon immediately if the flow doesn't feel instant and reliable.</div>
+          <div style="margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap;">
+            <span class="pill pill-red">Delay-sensitive</span>
+            <span class="pill pill-yellow">Large amounts</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">High-volume / VIP users</div>
+          <div class="card-body">Different limit tiers, dedicated support, and sometimes custom payment rails. Design must gracefully handle much larger transaction amounts and the additional compliance requirements that come with them.</div>
+          <div style="margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap;">
+            <span class="pill pill-yellow">Premium tier</span>
+            <span class="pill pill-red">Enhanced compliance</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rule-block info">
+        <div class="rule-title">Context-aware simplicity</div>
+        <div class="rule-body">The right level of detail and guidance varies dramatically by user type. A first-time buyer needs step-by-step explanation of what a bank transfer reference number is. A VIP trader needs it out of the way. Build systems that adapt — use onboarding state, verification level, and transaction history to calibrate the experience, not a one-size-fits-all approach.</div>
+      </div>
+    </div>
+
+    <!-- REGULATORY -->
+    <div id="sec-regulatory" class="section">
+      <div class="section-header">
+        <div class="section-tag">Fiat Team</div>
+        <div class="section-title">Regulatory & compliance design</div>
+        <div class="section-desc">Compliance is the invisible architecture of every fiat flow. Knowing the framework by region helps you design with constraints rather than fight them at the end.</div>
+      </div>
+
+      <div class="rule-block danger">
+        <div class="rule-title">The critical mindset shift</div>
+        <div class="rule-body">On the Fiat team, compliance is not a design afterthought — it's a co-designer. Every jurisdiction has different requirements for disclosures, fee transparency, risk warnings, authentication, and KYC gates. Involve Legal and Compliance at Phase 1 (Discovery), not Phase 5 (Validation). Late compliance reviews cause the most expensive redesigns.</div>
+      </div>
+
+      <div class="section-header" style="margin-top: 20px; border: none; margin-bottom: 14px;">
+        <div class="section-title" style="font-size: 16px;">Regulatory frameworks by region</div>
+      </div>
+
+      <table class="spec-table" style="margin-bottom: 20px;">
+        <thead><tr><th>Region</th><th>Framework</th><th>Key design impact</th><th>Binance source</th></tr></thead>
+        <tbody>
+          <tr><td>EU</td><td>MiCA, PSD2, GDPR</td><td>Strong consumer protections; SCA required; explicit consent flows; stablecoin restrictions; risk disclosures mandatory</td><td><a href="https://www.binance.com/en/blog/regulation/mica-stablecoin-rules-what-they-mean-and-how-binance-is-complying-346008117703109809" target="_blank" style="color:var(--yellow);text-decoration:none;">MiCA blog ↗</a></td></tr>
+          <tr><td>UK</td><td>FCA, Financial Promotions Regime</td><td>Risk warnings mandatory on all crypto promotions; CTA patterns restricted; Binance.UK operates as separate regulated domain</td><td><a href="https://www.binance.com/en/blog/ecosystem/binance-launches-uk-domain-in-compliance-with-new-financial-promotions-rules-2903800236178709961" target="_blank" style="color:var(--yellow);text-decoration:none;">FCA blog ↗</a></td></tr>
+          <tr><td>US</td><td>FinCEN, OFAC, State MTLs</td><td>Restricted in many states; heightened AML/KYC requirements; sanctions screening; FinCEN consent order shapes the compliance model</td><td><a href="https://www.binance.com/en/blog/compliance/dont-take-our-word-for-it-what-us-regulatory-agencies-said-about-binances-compliance-improvements-2405705937090840311" target="_blank" style="color:var(--yellow);text-decoration:none;">FinCEN blog ↗</a></td></tr>
+          <tr><td>Singapore</td><td>MAS guidelines</td><td>Advertising restrictions on crypto; prominent risk disclosures required; retail access controls</td><td><a href="https://www.binance.com/en/blog/compliance/playing-by-the-rules-an-overview-of-binances-compliance-program-7787599269355947143" target="_blank" style="color:var(--yellow);text-decoration:none;">Compliance overview ↗</a></td></tr>
+          <tr><td>Brazil / LATAM</td><td>Central Bank (PIX), SPEI (Mexico)</td><td>PIX and SPEI integration — instant rails with unique UX; CURP identity verification required for Mexico withdrawals; AML restricts 3rd-party bank accounts</td><td><a href="https://www.binance.com/en/blog/compliance/playing-by-the-rules-corporate-compliance-at-binance-499041692450966475" target="_blank" style="color:var(--yellow);text-decoration:none;">Corporate compliance ↗</a></td></tr>
+          <tr><td>India</td><td>RBI guidelines</td><td>UPI integration specifics; banking restrictions affect deposit/withdrawal flows significantly</td><td><a href="https://www.binance.com/en/blog/compliance" target="_blank" style="color:var(--yellow);text-decoration:none;">Compliance blog ↗</a></td></tr>
+        </tbody>
+      </table>
+
+      <div class="rule-block">
+        <div class="rule-title">Must-have UI elements for fiat flows (universal)</div>
+        <div class="rule-body">
+          <ul>
+            <li><strong>Risk warnings:</strong> "Crypto assets are volatile. You could lose your investment." — required in many jurisdictions; design them to be seen, not hidden</li>
+            <li><strong>Fee disclosures:</strong> Total cost must be visible before transaction confirmation — always, everywhere</li>
+            <li><strong>Terms & Conditions:</strong> Link to relevant ToS with clear indication of what the user is agreeing to</li>
+            <li><strong>GDPR consent:</strong> Explicit data consent flows for EU users — design these as part of the flow, not bolted on</li>
+            <li><strong>Sanctions screening:</strong> Some users/regions will be blocked — design graceful restriction screens that explain without exposing internal logic</li>
+            <li><strong>AML holds:</strong> If a transaction is flagged, design a clear holding state ("We're reviewing your transaction — this can take up to 24 hours") — never leave users in the dark</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="rule-block success">
+        <div class="rule-title">Compliance as UX — the right framing</div>
+        <div class="rule-body">Don't treat regulatory requirements as UI clutter to minimize. Fee disclosures, risk warnings, and KYC gates are trust-building moments when designed well. A user who understands exactly what they're agreeing to is more likely to complete a transaction, dispute less, and stay longer. The goal is integration, not concealment.</div>
+      </div>
+    </div>
+
+    <!-- METRICS -->
+    <div id="sec-metrics" class="section">
+      <div class="section-header">
+        <div class="section-tag">Fiat Team</div>
+        <div class="section-title">Metrics you own</div>
+        <div class="section-desc">As a senior designer on the Fiat team, you're accountable to these metrics. Know them, monitor them, and tie every design decision back to moving them.</div>
+      </div>
+
+      <table class="spec-table" style="margin-bottom: 24px;">
+        <thead><tr><th>Metric</th><th>What it measures</th><th>Design lever</th></tr></thead>
+        <tbody>
+          <tr><td>Fiat conversion rate</td><td>Users who start a buy/sell flow and complete it</td><td>Reduce steps, improve error recovery, increase trust signals</td></tr>
+          <tr><td>Drop-off rate per step</td><td>Where users abandon the funnel — each step</td><td>Identify the highest-friction moment; fix that first</td></tr>
+          <tr><td>Time to first purchase</td><td>Elapsed time from sign-up to first completed buy</td><td>Streamline KYC, reduce payment method friction</td></tr>
+          <tr><td>Payment success rate by method</td><td>How often each payment method succeeds vs. fails</td><td>Error messaging, method pre-selection, fallback flows</td></tr>
+          <tr><td>Transaction completion time</td><td>Time from "confirm" to funds received</td><td>Status clarity, expectation-setting, ETA accuracy</td></tr>
+          <tr><td>Fiat support ticket volume</td><td>Support contacts related to fiat flows</td><td>Unclear status states, error messages, KYC confusion</td></tr>
+          <tr><td>KYC completion rate</td><td>Users who start KYC and successfully complete it</td><td>Clarity of instructions, document upload UX, wait state design</td></tr>
+          <tr><td>NPS / CSAT for fiat flows</td><td>User satisfaction with deposit/withdrawal experience</td><td>Overall trust, transparency, and post-transaction communication</td></tr>
+        </tbody>
+      </table>
+
+      <div class="rule-block info">
+        <div class="rule-title">The metric that matters most</div>
+        <div class="rule-body">Time to first purchase is the single most important metric for fiat onboarding. It captures KYC friction, payment method clarity, and trust simultaneously. Every UX improvement you make to the onboarding flow should be measured against this. For returning users, payment success rate per method is your north star — a failed payment that isn't recovered gracefully is a user you're likely to lose.</div>
+      </div>
+    </div>
+
+    <!-- EXPERIMENTATION -->
+    <div id="sec-experimentation" class="section">
+      <div class="section-header">
+        <div class="section-tag">Fiat Team</div>
+        <div class="section-title">Experimentation ideas</div>
+        <div class="section-desc">A backlog of A/B test and design experiment hypotheses for fiat flows. Use these as starting points — validate with data before building.</div>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Fee transparency placement</div>
+          <div class="card-body">Hypothesis: showing the full fee breakdown at amount entry (not just at confirmation) increases trust and reduces abandonment at the review step.</div>
+          <div style="margin-top: 8px; display: flex; gap: 6px;">
+            <span class="pill pill-blue">A/B test</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">"Fastest vs. cheapest" toggle</div>
+          <div class="card-body">Let users declare their priority before selecting a payment method. Pre-sort options by their stated preference. Hypothesis: reduces cognitive load and increases payment method selection confidence.</div>
+          <div style="margin-top: 8px; display: flex; gap: 6px;">
+            <span class="pill pill-yellow">New pattern</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Default payment method pre-selection</div>
+          <div class="card-body">Pre-select the most recently used (or statistically most successful) payment method vs. showing a neutral list. Hypothesis: reduces time to confirm and increases completion rate for returning users.</div>
+          <div style="margin-top: 8px; display: flex; gap: 6px;">
+            <span class="pill pill-blue">A/B test</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Progress indicators in KYC</div>
+          <div class="card-body">Showing "Step 2 of 4" vs. no progress context. Hypothesis: visible progress reduces abandonment mid-KYC by setting expectations and creating commitment.</div>
+          <div style="margin-top: 8px; display: flex; gap: 6px;">
+            <span class="pill pill-blue">A/B test</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Trust badge impact</div>
+          <div class="card-body">Partner bank logos, security certification badges, and "funds secured by" messaging at payment entry. Hypothesis: increases conversion for first-time buyers who have high anxiety at the payment step.</div>
+          <div style="margin-top: 8px; display: flex; gap: 6px;">
+            <span class="pill pill-blue">A/B test</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Reassurance microcopy</div>
+          <div class="card-body">Adding contextual copy like "Your funds are secure while we verify this transaction" during processing states. Hypothesis: reduces support contacts and improves satisfaction scores during high-anxiety wait moments.</div>
+          <div style="margin-top: 8px; display: flex; gap: 6px;">
+            <span class="pill pill-yellow">Copy test</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-title">Before running any experiment</div>
+        <div class="rule-body">
+          <ul>
+            <li>Define the primary metric and the guardrail metrics (what you'll stop the test for if it goes wrong)</li>
+            <li>Calculate required sample size before starting — underpowered tests produce misleading results</li>
+            <li>Get compliance sign-off if the experiment touches fee display or risk warnings — these can't be tested freely in some markets</li>
+            <li>Run a pre-mortem: what does a failed test tell you that's still useful?</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- KYC -->
+    <div id="sec-kyc" class="section">
+      <div class="section-header">
+        <div class="section-tag">Fiat Team</div>
+        <div class="section-title">KYC & verification UX</div>
+        <div class="section-desc">KYC is the biggest friction point in fiat onboarding. Our job is to make it feel inevitable, safe, and fast — not punitive.</div>
+      </div>
+
+      <div class="rule-block danger">
+        <div class="rule-title">Common KYC UX failures to avoid</div>
+        <div class="rule-body">
+          <ul>
+            <li>Springing KYC requirements mid-transaction — always communicate limits before the user starts a flow</li>
+            <li>Unclear wait times — always show estimated review time (hours, not just "processing")</li>
+            <li>Cryptic rejection messages — state exactly what failed and what the user needs to resubmit</li>
+            <li>Losing form progress on session expiry — save state where technically possible</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="rule-block success">
+        <div class="rule-title">KYC design best practices</div>
+        <div class="rule-body">
+          <ul>
+            <li>Progressive disclosure: unlock KYC steps gradually — don't show all requirements upfront</li>
+            <li>Explain why each piece of information is needed — "We need your address to comply with local regulations"</li>
+            <li>Document upload: show file requirements before upload, not after a failed attempt</li>
+            <li>Show a progress indicator during the verification queue — even a rough one reduces abandonment</li>
+            <li>Celebrate completion — a successful KYC is a big trust moment; mark it clearly</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="section-header" style="margin-top: 20px; border: none; margin-bottom: 12px;">
+        <div class="section-title" style="font-size: 15px;">Verification levels & limits</div>
+      </div>
+
+      <table class="spec-table">
+        <thead><tr><th>Level</th><th>Requirements</th><th>Fiat limits (typical)</th><th>Design consideration</th></tr></thead>
+        <tbody>
+          <tr><td>Unverified</td><td>Email + phone</td><td>No fiat access</td><td>Surface upgrade CTA prominently; explain the value</td></tr>
+          <tr><td>Basic (Lv.1)</td><td>Name + DOB + nationality</td><td>~$300/day</td><td>Inline form, no doc upload — low friction</td></tr>
+          <tr><td>Intermediate (Lv.2)</td><td>Government ID</td><td>~$8,000/day</td><td>Document photo flow — guide camera angle, lighting</td></tr>
+          <tr><td>Advanced (Lv.3)</td><td>Proof of address</td><td>~$100,000/day</td><td>File upload with format guidance; async review state</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div id="sec-payments" class="section">
+      <div class="section-header">
+        <div class="section-tag">Fiat Team</div>
+        <div class="section-title">Payment flows</div>
+        <div class="section-desc">Design considerations for each payment method category the Fiat team supports.</div>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Credit / Debit Card</div>
+          <div class="card-body">Fastest for users, highest fees. Show fee clearly. 3DS authentication interrupts the flow — design a holding screen with clear "you'll be redirected" messaging.</div>
+          <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap;">
+            <span class="pill pill-green">Instant</span>
+            <span class="pill pill-red">Highest fees</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Bank Transfer / SEPA</div>
+          <div class="card-body">Lowest fees, slowest. Always show ETA (T+1 for SEPA Instant, T+3 for standard). Provide bank reference codes and confirm details clearly to prevent user errors.</div>
+          <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap;">
+            <span class="pill pill-blue">1–3 days</span>
+            <span class="pill pill-green">Lowest fees</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Local payment methods</div>
+          <div class="card-body">Varies by region — PIX (Brazil), UPI (India), BLIK (Poland), iDEAL (NL). Design for market-specific flows. Don't genericize — local users know their payment UX.</div>
+          <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap;">
+            <span class="pill pill-yellow">Region-specific</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Fiat Wallet</div>
+          <div class="card-body">Users' in-app fiat balance. Internal transfer — instant, no fees. Treat as a first-class payment option; surface its balance clearly in payment selection.</div>
+          <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap;">
+            <span class="pill pill-green">Instant</span>
+            <span class="pill pill-green">No fees</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-title">Payment method selection UX rules</div>
+        <div class="rule-body">
+          <ul>
+            <li>Always show fees and ETA per method at selection — never hide until confirmation</li>
+            <li>Pre-select the most recently used payment method</li>
+            <li>Show only payment methods available to the user in their region and verification level</li>
+            <li>Adding a new payment method mid-flow should return user to the same point in the flow — not restart</li>
+            <li>Failed payment: explain why (card declined, insufficient funds) and offer alternatives</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPECS -->
+    <div id="sec-specs" class="section">
+      <div class="section-header">
+        <div class="section-tag">Standards</div>
+        <div class="section-title">Spacing & layout specs</div>
+        <div class="section-desc">The spacing system, grid, and layout rules that keep the product consistent across all surfaces.</div>
+      </div>
+
+      <table class="spec-table">
+        <thead><tr><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+        <tbody>
+          <tr><td><span class="token">space-1</span></td><td>4px</td><td>Micro gaps — icon to label, inline elements</td></tr>
+          <tr><td><span class="token">space-2</span></td><td>8px</td><td>Compact element spacing, tag gaps</td></tr>
+          <tr><td><span class="token">space-3</span></td><td>12px</td><td>Component internal padding (small)</td></tr>
+          <tr><td><span class="token">space-4</span></td><td>16px</td><td>Standard padding — list items, cards</td></tr>
+          <tr><td><span class="token">space-5</span></td><td>20px</td><td>Section gaps on mobile</td></tr>
+          <tr><td><span class="token">space-6</span></td><td>24px</td><td>Standard section separator</td></tr>
+          <tr><td><span class="token">space-8</span></td><td>32px</td><td>Large section gaps</td></tr>
+          <tr><td><span class="token">space-12</span></td><td>48px</td><td>Major section breaks, page padding</td></tr>
+        </tbody>
+      </table>
+
+      <table class="spec-table" style="margin-top: 20px;">
+        <thead><tr><th>Platform</th><th>Grid</th><th>Columns</th><th>Gutter</th><th>Margin</th></tr></thead>
+        <tbody>
+          <tr><td>Mobile (375–428px)</td><td>Fluid</td><td>4</td><td>16px</td><td>16px</td></tr>
+          <tr><td>Tablet (768–1024px)</td><td>Fixed center</td><td>8</td><td>20px</td><td>24px</td></tr>
+          <tr><td>Desktop (1280px+)</td><td>Max 1280px</td><td>12</td><td>24px</td><td>Auto</td></tr>
+        </tbody>
+      </table>
+
+      <div class="rule-block">
+        <div class="rule-title">Border radius standards</div>
+        <div class="rule-body">
+          <ul>
+            <li><span class="token">radius-sm</span> 4px — tags, badges, small chips</li>
+            <li><span class="token">radius-md</span> 8px — input fields, small buttons, tooltips</li>
+            <li><span class="token">radius-lg</span> 12px — cards, modals, bottom sheets</li>
+            <li><span class="token">radius-xl</span> 16px — large feature cards, hero sections</li>
+            <li><span class="token">radius-full</span> 9999px — pills, avatar circles</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATES CHECKLIST -->
+    <div id="sec-states-checklist" class="section">
+      <div class="section-header">
+        <div class="section-tag">Standards</div>
+        <div class="section-title">States & annotation checklist</div>
+        <div class="section-desc">Every screen you design must account for all possible states. Use these checklists before calling any design ready for review or handoff.</div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-title">States to always design</div>
+        <div class="rule-body">
+          <ul>
+            <li>✅ <strong>Default</strong> — the baseline state when a user arrives</li>
+            <li>✅ <strong>Hover / Pressed / Focus</strong> — interactive feedback for every element</li>
+            <li>✅ <strong>Loading / Skeleton</strong> — while data or payment is processing</li>
+            <li>✅ <strong>Empty state</strong> — no payment methods added, no transaction history yet</li>
+            <li>✅ <strong>Error state (inline)</strong> — field-level validation errors</li>
+            <li>✅ <strong>Error state (toast/banner)</strong> — system-level errors (network, server)</li>
+            <li>✅ <strong>Success state</strong> — confirmed purchase, successful withdrawal</li>
+            <li>✅ <strong>Disabled</strong> — button unavailable until conditions met</li>
+            <li>✅ <strong>Edge cases</strong> — very long names, zero amounts, max limits, single-character amounts, overflow text</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="rule-block info">
+        <div class="rule-title">Annotation checklist — before handoff</div>
+        <div class="rule-body">
+          <ul>
+            <li>☐ Spacing and layout grid documented</li>
+            <li>☐ Interaction behaviors described (what happens on tap, swipe, long-press)</li>
+            <li>☐ Transition and animation specs noted (duration, easing curve)</li>
+            <li>☐ API-dependent content labeled (what's real data vs. placeholder)</li>
+            <li>☐ Copy strings finalized — or marked TBD with context for copywriter</li>
+            <li>☐ Accessibility notes added (ARIA labels, focus order, screen reader behavior)</li>
+            <li>☐ Component variants mapped to the design system (or deviation documented)</li>
+            <li>☐ Responsive behavior at breakpoints specified</li>
+            <li>☐ Localization considerations noted (RTL, long strings, currency format)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="rule-block danger">
+        <div class="rule-title">Fiat-specific states — the ones most designers miss</div>
+        <div class="rule-body">
+          <ul>
+            <li>✅ <strong>Pending</strong> — extremely common in fiat; bank transfers can stay pending for 1–3 days. Design a full pending state with ETA, reference number, and what to do if it doesn't arrive</li>
+            <li>✅ <strong>Delayed</strong> — payment is taking longer than the stated ETA. Proactive communication prevents support contacts — notify users before they contact you</li>
+            <li>✅ <strong>Reversed / Refunded</strong> — transaction was cancelled and funds are returning. Show exact return ETA and confirmation that funds are on their way back</li>
+            <li>✅ <strong>Maintenance / Channel offline</strong> — payment providers go offline; design graceful "temporarily unavailable" states that suggest an alternative method</li>
+            <li>✅ <strong>KYC-gated</strong> — the user needs to verify before proceeding; frame as an unlock, not a wall</li>
+            <li>✅ <strong>Region-blocked</strong> — feature unavailable in the user's jurisdiction; explain clearly without exposing legal reasoning</li>
+          </ul>
+        </div>
+      </div>
+
+
+        <div class="rule-body">
+          <ul>
+            <li>✅ Security badges / SSL indicators on payment screens</li>
+            <li>✅ Clear fee breakdowns shown <em>before</em> the confirmation step</li>
+            <li>✅ Rate lock timer visible with countdown</li>
+            <li>✅ Transaction ID / reference number shown post-confirmation (copyable)</li>
+            <li>✅ Masked sensitive data by default (card number, bank account)</li>
+            <li>✅ 2FA prompt for high-value or irreversible actions</li>
+            <li>✅ Clear cancellation and dispute paths visible after completion</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCESSIBILITY -->
+    <div id="sec-accessibility" class="section">
+      <div class="section-header">
+        <div class="section-tag">Standards</div>
+        <div class="section-title">Accessibility</div>
+        <div class="section-desc">Binance targets WCAG 2.1 AA compliance. Financial applications have a heightened responsibility for accessibility — errors cost users money.</div>
+      </div>
+
+      <div class="rule-block">
+        <div class="rule-title">Color contrast</div>
+        <div class="rule-body">
+          <ul>
+            <li>Normal text: minimum 4.5:1 contrast ratio</li>
+            <li>Large text (18px+ or 14px+ bold): minimum 3:1</li>
+            <li>UI components and focus states: minimum 3:1</li>
+            <li>Yellow on dark backgrounds passes; yellow on white requires a dark text alternative</li>
+            <li>Never use color alone to convey meaning — always pair with icon or text label</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="rule-block info">
+        <div class="rule-title">Touch targets</div>
+        <div class="rule-body">Minimum 44×44px for all interactive elements on mobile. This is a hard requirement, not a guideline. Buttons, list items, checkboxes, and toggle switches must all meet this. Use padding to expand small visual elements to the minimum touch target size.</div>
+      </div>
+
+      <div class="rule-block success">
+        <div class="rule-title">Screen reader support</div>
+        <div class="rule-body">
+          <ul>
+            <li>All form inputs must have visible labels (not just placeholder text)</li>
+            <li>Error messages must be associated with their input via ARIA</li>
+            <li>Dynamic content changes (rate updates, status changes) must use ARIA live regions</li>
+            <li>Amount inputs should announce currency along with the value</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- BEST PRACTICES -->
+    <div id="sec-best-practices" class="section">
+      <div class="section-header">
+        <div class="section-tag">Standards</div>
+        <div class="section-title">Best practices</div>
+        <div class="section-desc">Hard-won lessons from designing high-stakes financial UX at global scale.</div>
+      </div>
+
+      <div class="accordion open">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">Designing for trust in financial UX</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <ul>
+            <li>Show amounts in the user's local currency first, crypto second — for fiat flows, fiat is primary</li>
+            <li>Use precise numbers, not rounded estimates — "€249.87" not "~€250"</li>
+            <li>Never use patterns that resemble dark patterns — no pre-checked upsells in payment flows</li>
+            <li>Confirmation screens are your last chance to build confidence — make them thorough</li>
+            <li>Processing states must feel alive — a static spinner for a 30-second payment creates anxiety</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">Designing for global audiences</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <ul>
+            <li>Never assume a banking experience — many Binance users in emerging markets are underbanked</li>
+            <li>Allow extra space in layouts for translated text — German and Portuguese strings are often 30–40% longer than English</li>
+            <li>RTL language support must be considered in every flow — don't design LTR-only</li>
+            <li>Number formatting is locale-specific — always use the device/account locale setting, never hardcode</li>
+            <li>Payment methods vary dramatically by region — design the system, not just the specific method</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">Working with compliance constraints</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <ul>
+            <li>Compliance is a design partner, not an obstacle — involve them early to avoid late-stage redesigns</li>
+            <li>Regulatory disclosures are required but can be designed well — use progressive disclosure to show required text without burying the user</li>
+            <li>MiCA (EU), FinCEN (US), and local regulations mean some features are region-gated — design for this gracefully with clear explanation</li>
+            <li>KYC requirements change — design the system to accommodate new verification steps without full redesigns</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">Intentional friction — when to add it</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <ul>
+            <li>In crypto, removing all friction is not always the right goal — for high-value or irreversible actions, a confirmation modal ("Are you sure you want to transfer $10,000?") prevents catastrophic user errors</li>
+            <li>Step-up authentication (2FA prompt) for transactions above a threshold is both a security requirement and a trust signal — design it as reassurance, not an obstacle</li>
+            <li>The key test: does this friction protect the user, or does it just protect the business? If it protects the user, it's worth keeping.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">Designing for interruption & resumption</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <ul>
+            <li>Users <em>will</em> leave mid-flow — to find their bank IBAN, check their card number, or authenticate via their banking app during 3DS</li>
+            <li>3D-Secure authentication is a major interruption: the user is redirected to their bank's app or website and then returns. Design a clear "returning from authentication" holding screen — never drop them back to the start of the flow</li>
+            <li>Bank transfer reference codes: show these prominently and make them copyable — users need to switch apps to paste this into their banking app</li>
+            <li>Save form state wherever technically feasible — a user who re-opens the app should land at the furthest step they reached, not at step 1</li>
+            <li>Edge case: what happens if the user closes the app while a card payment is processing? Design a "pending transaction" state on the home screen that lets them track status without restarting</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span class="accordion-title">Avoiding cognitive overload</span>
+          <span class="accordion-arrow">▼</span>
+        </div>
+        <div class="accordion-body">
+          <ul>
+            <li>Fiat screens are number-dense by necessity — amounts, fees, rates, limits, ETAs. Be ruthless about hierarchy: the user's amount and final received amount are primary; everything else is secondary</li>
+            <li>Progressive disclosure: show the summary first, details on demand. Don't front-load every piece of information</li>
+            <li>Avoid overloading the payment method selection screen — if a user has 8 saved methods, introduce grouping or a default recommendation rather than a flat undifferentiated list</li>
+            <li>Never show a technical error code to a user. "Error 4012" means nothing — "Your card was declined by your bank. Please try a different card or contact your bank." is actionable</li>
+          </ul>
+        </div>
+      </div>
+
+
+        <div class="accordion-body">
+          <ul>
+            <li>Share work early and often — critique is most valuable before you're attached to a direction</li>
+            <li>Critique the design, not the designer — use "this pattern" not "you did"</li>
+            <li>Come to critique with specific questions, not just "what do you think"</li>
+            <li>Document feedback and decisions in Figma comments — design decisions should be traceable</li>
+            <li>Push back with data or principles, not personal preference</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESOURCES -->
+    <div id="sec-resources" class="section">
+      <div class="section-header">
+        <div class="section-tag">Resources</div>
+        <div class="section-title">Tools & resources</div>
+        <div class="section-desc">Every tool in the Fiat team designer's stack, plus key external references worth bookmarking.</div>
+      </div>
+
+      <table class="spec-table" style="margin-bottom: 24px;">
+        <thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>Figma</td><td>Design, prototyping, component library, handoff — your primary tool</td></tr>
+          <tr><td>FigJam</td><td>Workshops, user journey mapping, ideation, retrospectives</td></tr>
+          <tr><td>Jira</td><td>Tickets, sprint tracking, feature planning</td></tr>
+          <tr><td>Confluence</td><td>Documentation, design decisions, process docs</td></tr>
+          <tr><td>Lark</td><td>Primary communication tool at Binance (ByteDance ecosystem) — Lark Docs also used for internal documentation</td></tr>
+          <tr><td>Telegram</td><td>Secondary comms, especially for cross-timezone coordination and crypto-native workflows</td></tr>
+          <tr><td>Maze / UserTesting</td><td>Unmoderated usability research, prototype testing at scale</td></tr>
+          <tr><td>Lookback</td><td>Moderated usability session recording and collaborative analysis</td></tr>
+          <tr><td>Mixpanel / Amplitude</td><td>Product analytics, funnel analysis, drop-off monitoring</td></tr>
+          <tr><td>ProtoPie</td><td>Advanced interactive prototyping for complex conditional flows and micro-interactions</td></tr>
+          <tr><td>Lottie / Rive</td><td>Micro-animations, loading states, transition design</td></tr>
+          <tr><td>Zeplin</td><td>Additional handoff layer if used by your engineering team</td></tr>
+        </tbody>
+      </table>
+
+      <div class="section-header" style="margin-top: 8px; border: none; margin-bottom: 14px;">
+        <div class="section-title" style="font-size: 16px;">External references</div>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-title">Binance Blog</div>
+          <div class="card-body">Product updates, feature announcements, and design decisions from the Binance team. Essential for staying current on what's shipped.</div>
+          <span class="card-tag">binance.com/en/blog</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Binance Academy</div>
+          <div class="card-body">Crypto education content — understand what your users are learning so you can design for their actual mental models.</div>
+          <span class="card-tag">academy.binance.com</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Baymard Institute</div>
+          <div class="card-body">The best research-backed resource for checkout and payment UX — highly relevant for fiat flows. Study their checkout form guidelines especially.</div>
+          <span class="card-tag">baymard.com</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Apple HIG & Material Design 3</div>
+          <div class="card-body">Platform-specific interaction and component guidelines. iOS-first for Binance mobile, but Android (80%+ of global users) needs equal design attention.</div>
+          <span class="card-tag">Platform guidelines</span>
+        </div>
+        <div class="card">
+          <div class="card-title">WCAG 2.2</div>
+          <div class="card-body">The accessibility standard Binance targets (AA minimum, AAA where possible). Bookmark the quick reference guide for color, focus, and touch target rules.</div>
+          <span class="card-tag">w3.org/WAI/WCAG22</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Binance Support Center</div>
+          <div class="card-body">See what users actually ask about most — a direct window into the most painful UX failures across all Binance products, including fiat. Read the top fiat-related articles on day one.</div>
+          <span class="card-tag">binance.com/en/support</span>
+        </div>
+        <div class="card">
+          <div class="card-title">CoinMarketCap / CoinGecko</div>
+          <div class="card-body">Market data context. CoinMarketCap is owned by Binance — understand how the ecosystem connects. Use for understanding the crypto assets your users are buying and selling.</div>
+          <span class="card-tag">Market context</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPETITORS -->
+    <div id="sec-competitors" class="section">
+      <div class="section-header">
+        <div class="section-tag">Resources</div>
+        <div class="section-title">Competitive landscape</div>
+        <div class="section-desc">Key players to benchmark against for fiat on/off-ramp UX. Focus on deposit, withdrawal, KYC, and payment method experience.</div>
+      </div>
+
+      <table class="spec-table">
+        <thead><tr><th>Competitor</th><th>Strengths in fiat UX</th><th>Weaknesses</th><th>Key insight</th></tr></thead>
+        <tbody>
+          <tr><td>Coinbase</td><td>Gold standard for simple fiat-to-crypto onboarding; trusted brand</td><td>Higher fees; limited local payment methods globally</td><td>KYC onboarding and first-buy flow set the bar for clarity</td></tr>
+          <tr><td>Kraken</td><td>Strong bank transfer support; good for power users; excellent fee transparency</td><td>Dated UI; "Funding" terminology confuses new users</td><td>Their fee breakdown display is best-in-class</td></tr>
+          <tr><td>Revolut</td><td>Best-in-class fintech UX for fiat; instant transfers; clean design</td><td>Crypto is secondary to banking product</td><td>Payment method speed/fee table is the aspirational benchmark</td></tr>
+          <tr><td>Wise</td><td>Radical fee transparency; mid-market rate display; trust through honesty</td><td>Crypto not native; limited asset coverage</td><td>Their fee breakdown (before confirmation) is what fiat UX should aspire to</td></tr>
+          <tr><td>Cash App</td><td>Simplest Bitcoin buying flow — tap, confirm, done</td><td>US-only; limited asset selection</td><td>Time-to-first-purchase benchmark; onboarding is near-frictionless</td></tr>
+          <tr><td>MoonPay / Ramp</td><td>Third-party fiat on-ramp specialists; clean widget patterns</td><td>Higher fees due to intermediary layer</td><td>Study their widget UX — this is what Binance Connect competes with</td></tr>
+          <tr><td>eToro</td><td>Beginner-friendly; social layer differentiates</td><td>Complex product creates navigation confusion</td><td>"Deposit Now" CTA drives action better than "Buy Crypto"</td></tr>
+        </tbody>
+      </table>
+
+      <div class="rule-block info">
+        <div class="rule-title">Key fiat UX benchmark areas</div>
+        <div class="rule-body">
+          <ul>
+            <li><strong>Deposit options:</strong> Compare payment method coverage, fees, and ETAs across markets</li>
+            <li><strong>KYC procedures:</strong> Steps to reach meaningful transaction limits</li>
+            <li><strong>Error recovery:</strong> How competitors handle failed payments and KYC rejections</li>
+            <li><strong>Deposit/withdrawal limits:</strong> How limits are communicated and how users upgrade</li>
+            <li><strong>Overall UX:</strong> Time-to-first-deposit is the key metric — benchmark quarterly</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /layout -->
+
+<script>
+function switchSection(id) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  const sectionMap = {
+    'overview':'sec-overview','design-system':'sec-design-system',
+    'process':'sec-process','fiat-ux':'sec-fiat-ux',
+    'specs':'sec-specs','resources':'sec-resources'
+  };
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+  const t = document.getElementById(sectionMap[id]);
+  if(t) t.classList.add('visible');
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+}
+
+function navTo(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+  const t = document.getElementById('sec-' + id);
+  if(t) t.classList.add('visible');
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.getElementById('main-content').scrollTop = 0;
+}
+
+function toggleAccordion(header) {
+  header.parentElement.classList.toggle('open');
+}
+</script>
+</body>
+</html>
