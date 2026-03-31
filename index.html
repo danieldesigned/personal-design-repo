@@ -603,12 +603,149 @@
   .sidebar::-webkit-scrollbar-thumb,
   .content::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
 
-  @media (max-width: 768px) {
-    .layout { flex-direction: column; height: auto; }
-    .sidebar { width: 100%; height: auto; }
-    .content { padding: 20px 16px; }
+  /* HAMBURGER BUTTON — hidden on desktop */
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background 0.12s;
+    flex-shrink: 0;
+  }
+  .hamburger:hover { background: rgba(255,255,255,0.06); }
+  .hamburger span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: var(--text-primary);
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+  .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* DRAWER BACKDROP */
+  .drawer-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+    backdrop-filter: blur(2px);
+  }
+  .drawer-backdrop.open { display: block; }
+
+  /* ── RESPONSIVE BREAKPOINTS ── */
+
+  /* Tablet: 769px – 1024px */
+  @media (max-width: 1024px) {
+    .sidebar { width: 200px; }
+    .content { padding: 24px 24px; }
     .metric-row { grid-template-columns: repeat(2, 1fr); }
     .nav-tabs { display: none; }
+    .spec-table td:first-child { width: 140px; }
+  }
+
+  /* Mobile: ≤ 768px — drawer pattern */
+  @media (max-width: 768px) {
+
+    /* Topbar */
+    .topbar { padding: 0 16px; }
+    .nav-tabs { display: none; }
+    .hamburger { display: flex; }
+
+    /* Hide desktop sidebar, convert to fixed drawer */
+    .layout {
+      flex-direction: column;
+      height: calc(100vh - 56px);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 56px;
+      left: 0;
+      bottom: 0;
+      width: 280px;
+      max-width: 85vw;
+      z-index: 300;
+      transform: translateX(-100%);
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      border-right: 1px solid rgba(255,255,255,0.12);
+      padding: 12px 0 32px;
+      overflow-y: auto;
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    /* Content fills full width */
+    .content {
+      width: 100%;
+      padding: 20px 16px 40px;
+      overflow-y: auto;
+      height: 100%;
+    }
+
+    /* Metric grid: 2 cols on mobile */
+    .metric-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+    /* Cards: single column */
+    .card-grid { grid-template-columns: 1fr; }
+
+    /* Tables: horizontal scroll wrapper */
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 20px;
+    }
+    .spec-table { min-width: 480px; }
+    .spec-table td:first-child { width: auto; min-width: 110px; }
+
+    /* Flow diagrams: wrap and reduce size */
+    .flow { gap: 4px; }
+    .flow-node { font-size: 11px; padding: 6px 10px; }
+    .flow-arrow { font-size: 13px; padding: 0 3px; }
+
+    /* Section title smaller */
+    .section-title { font-size: 18px; }
+
+    /* Rule blocks: reduce padding */
+    .rule-block { padding: 12px 14px; }
+
+    /* Accordion headers: comfortable tap target */
+    .accordion-header { padding: 14px 16px; min-height: 48px; }
+
+    /* Process steps: tighter */
+    .step-content { padding-bottom: 18px; }
+
+    /* Color grid: more columns on mobile */
+    .color-grid { grid-template-columns: repeat(3, 1fr); }
+
+    /* Spec table first col narrower */
+    .spec-table td:first-child { min-width: 100px; }
+
+    /* Logo text truncate on very small screens */
+    @media (max-width: 380px) {
+      .logo span:not(.logo-badge) { display: none; }
+    }
+  }
+
+  /* Small phones */
+  @media (max-width: 375px) {
+    .metric-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .metric-card { padding: 12px; }
+    .metric-value { font-size: 17px; }
   }
 </style>
 </head>
@@ -638,13 +775,19 @@
     <button class="nav-tab" onclick="switchSection('specs')">Specs</button>
     <button class="nav-tab" onclick="switchSection('resources')">Resources</button>
   </div>
+  <button class="hamburger" id="hamburger" onclick="toggleDrawer()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
 </div>
+
+<!-- DRAWER BACKDROP -->
+<div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
 
 <!-- LAYOUT -->
 <div class="layout">
 
   <!-- SIDEBAR -->
-  <div class="sidebar">
+  <div class="sidebar" id="sidebar">
     <div class="sidebar-section">
       <div class="sidebar-label">Getting Started</div>
       <div class="sidebar-item active" onclick="navTo('overview', this)"><div class="sidebar-dot"></div> Overview</div>
@@ -2270,6 +2413,33 @@
 </div><!-- /layout -->
 
 <script>
+/* ── DRAWER ── */
+function toggleDrawer() {
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('drawer-backdrop');
+  const hamburger = document.getElementById('hamburger');
+  const isOpen = sidebar.classList.contains('open');
+  if (isOpen) {
+    closeDrawer();
+  } else {
+    sidebar.classList.add('open');
+    backdrop.classList.add('open');
+    hamburger.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeDrawer() {
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('drawer-backdrop');
+  const hamburger = document.getElementById('hamburger');
+  sidebar.classList.remove('open');
+  backdrop.classList.remove('open');
+  hamburger.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ── NAV ── */
 function switchSection(id) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   event.target.classList.add('active');
@@ -2282,6 +2452,7 @@ function switchSection(id) {
   const t = document.getElementById(sectionMap[id]);
   if(t) t.classList.add('visible');
   document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('main-content').scrollTop = 0;
 }
 
 function navTo(id, el) {
@@ -2291,11 +2462,39 @@ function navTo(id, el) {
   document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
   if(el) el.classList.add('active');
   document.getElementById('main-content').scrollTop = 0;
+  closeDrawer();
 }
 
 function toggleAccordion(header) {
   header.parentElement.classList.toggle('open');
 }
+
+/* ── TABLE SCROLL WRAPPERS ── */
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.spec-table').forEach(table => {
+    if (!table.parentElement.classList.contains('table-scroll')) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'table-scroll';
+      table.parentNode.insertBefore(wrapper, table);
+      wrapper.appendChild(table);
+    }
+  });
+});
+
+/* ── CLOSE DRAWER ON RESIZE TO DESKTOP ── */
+window.addEventListener('resize', function() {
+  if (window.innerWidth > 768) closeDrawer();
+});
+
+/* ── SWIPE TO CLOSE DRAWER ── */
+let touchStartX = 0;
+document.getElementById('sidebar') && document.getElementById('sidebar').addEventListener('touchstart', function(e) {
+  touchStartX = e.touches[0].clientX;
+}, { passive: true });
+document.addEventListener('touchend', function(e) {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (dx < -60 && document.getElementById('sidebar').classList.contains('open')) closeDrawer();
+}, { passive: true });
 </script>
 </body>
 </html>
